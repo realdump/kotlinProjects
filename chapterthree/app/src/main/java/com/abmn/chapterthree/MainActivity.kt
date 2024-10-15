@@ -30,6 +30,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+class Greeting(s: String) {
+
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PacktCenterAlignedTopBar(){
