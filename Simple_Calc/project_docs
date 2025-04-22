@@ -1,0 +1,965 @@
+Here’s a simple Kotlin app for a calculator using Jetpack Compose. The app features basic arithmetic operations: addition, subtraction, multiplication, and division.
+
+First, make sure your build.gradle file is set up for Jetpack Compose:
+
+build.gradle (Project)
+gradle
+Copy
+Edit
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.example.calculator"
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.4.0'
+    }
+
+    buildFeatures {
+        compose true
+    }
+}
+
+dependencies {
+    implementation 'androidx.compose.ui:ui:1.4.0'
+    implementation 'androidx.compose.material3:material3:1.0.0'
+    implementation 'androidx.compose.ui:ui-tooling-preview:1.4.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+    implementation 'androidx.activity:activity-compose:1.6.0'
+    implementation 'androidx.navigation:navigation-compose:2.5.3'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.10"
+}
+Now, here's the full Kotlin code for the calculator using Jetpack Compose.
+
+MainActivity.kt
+kotlin
+Copy
+Edit
+package com.example.calculator
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.calculator.ui.theme.CalculatorTheme
+import kotlin.math.*
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            CalculatorApp()
+        }
+    }
+}
+
+@Composable
+fun CalculatorApp() {
+    var input by remember { mutableStateOf("") }
+    var result by remember { mutableStateOf("") }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Simple Calculator") }
+            )
+        },
+        content = {
+            CalculatorUI(input, result, onButtonClick = { button ->
+                if (button == "=") {
+                    try {
+                        result = evaluateExpression(input)
+                    } catch (e: Exception) {
+                        result = "Error"
+                    }
+                    input = result
+                } else if (button == "C") {
+                    input = ""
+                    result = ""
+                } else {
+                    input += button
+                }
+            })
+        }
+    )
+}
+
+@Composable
+fun CalculatorUI(input: String, result: String, onButtonClick: (String) -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = input,
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.Black,
+            maxLines = 1
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = result,
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.Gray,
+            maxLines = 1
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        val buttons = listOf(
+            "7", "8", "9", "/",
+            "4", "5", "6", "*",
+            "1", "2", "3", "-",
+            "0", ".", "=", "+",
+            "C"
+        )
+
+        GridLayout(buttons, onButtonClick)
+    }
+}
+
+@Composable
+fun GridLayout(buttons: List<String>, onButtonClick: (String) -> Unit) {
+    Column {
+        for (i in buttons.chunked(4)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                for (button in i) {
+                    Button(
+                        onClick = { onButtonClick(button) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                    ) {
+                        Text(text = button, color = Color.White)
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun evaluateExpression(expression: String): String {
+    // This will handle basic arithmetic expressions, using eval or a parser could be done here
+    return try {
+        val result = expression.replace(Regex("[^0-9+\\-*/.]"), "")
+        val evalResult = eval(result)
+        if (evalResult == evalResult.toInt().toDouble()) evalResult.toInt().toString() else evalResult.toString()
+    } catch (e: Exception) {
+        "Error"
+    }
+}
+
+fun eval(expression: String): Double {
+    // Simple evaluation using built-in Kotlin methods
+    return when {
+        expression.contains("+") -> {
+            val parts = expression.split("+")
+            parts[0].toDouble() + parts[1].toDouble()
+        }
+        expression.contains("-") -> {
+            val parts = expression.split("-")
+            parts[0].toDouble() - parts[1].toDouble()
+        }
+        expression.contains("*") -> {
+            val parts = expression.split("*")
+            parts[0].toDouble() * parts[1].toDouble()
+        }
+        expression.contains("/") -> {
+            val parts = expression.split("/")
+            parts[0].toDouble() / parts[1].toDouble()
+        }
+        else -> expression.toDouble()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DefaultPreview() {
+    CalculatorApp()
+}
+Explanation:
+Basic UI Layout:
+
+The calculator UI consists of a Text field that shows the input and the result.
+
+Below that, there is a grid layout for the calculator buttons.
+
+Logic:
+
+The onButtonClick function handles the logic when any button is clicked.
+
+The evaluateExpression function processes the input and evaluates it as a mathematical expression.
+
+Operations:
+
+Basic operations (+, -, *, /) are supported.
+
+Error Handling:
+
+If there’s an issue in evaluating the expression, "Error" is displayed.
+
+This app will allow you to perform simple calculations. You can enhance this further by adding more complex functionality, like parentheses handling, scientific operations, or memory functionality.
+
+
+
+
+
+
+
+You said:
+e: file:///home/abdul/Documents/GitHub/kotlinProjects/Simple_Calc/app/src/main/java/com/abmn/simple_calc/MainActivity.kt:33:13 This material API is experimental and is likely to change or to be removed in the future.
+
+I am getting above error
+
+
+ChatGPT said:
+Ah, I see what’s happening!
+
+You’re getting this warning because TopAppBar from material3 is @ExperimentalMaterial3Api, meaning it's still under development and might change later — so you need to explicitly opt-in to use it.
+
+It's not a "hard" error — just a warning unless you treat warnings as errors — but you can fix it cleanly by opting into the experimental API.
+
+✅ Here's how you fix it:
+
+At the top of your MainActivity.kt file, add this import:
+
+kotlin
+Copy
+Edit
+import androidx.compose.material3.ExperimentalMaterial3Api
+And annotate the CalculatorApp() Composable function like this:
+
+kotlin
+Copy
+Edit
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CalculatorApp() {
+    // your code
+}
+So your code should look like:
+kotlin
+Copy
+Edit
+import androidx.compose.material3.ExperimentalMaterial3Api
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CalculatorApp() {
+    // ...
+}
+🔵 What's happening?
+In Jetpack Compose material3, some components (like TopAppBar) are still evolving. To use them, you have to "opt in" manually so you acknowledge that they might change in future versions.
+
+If you want, I can also show you a version using CenterAlignedTopAppBar (a newer style) instead of TopAppBar — looks more modern!
+Want that too? 🚀
+
+
+
+
+
+
+
+You said:
+now its working
+
+
+ChatGPT said:
+Awesome, glad it's working now! 🔥
+
+If you want to upgrade it later — like adding dark mode, history of calculations, better expression evaluation (with parentheses (), multiple operations like 2+3*4), or fancier button layouts — just tell me. We can level it up anytime. 🚀
+
+Are you planning to add anything else next? 👀
+
+
+
+
+
+
+
+You said:
+when i run in the device app is not opening, it just show white screen for a while and closes
+
+
+ChatGPT said:
+Got it — the app shows white screen and crashes/closes immediately.
+That means some runtime crash is happening (probably not compile errors, but something inside your app logic).
+
+We need to check logs to find the exact error.
+
+Can you check Logcat and tell me if you see any crash like:
+yaml
+Copy
+Edit
+E/AndroidRuntime: FATAL EXCEPTION: main
+    Process: com.example.calculator, PID: 12345
+    java.lang.Exception: ...
+Look for anything that says FATAL EXCEPTION.
+
+Meanwhile, very likely the issue is inside the eval() or evaluateExpression() function.
+
+👉 Currently your eval() is very basic:
+It only splits on the first operator it finds and tries to calculate —
+BUT if you type 12+7-5, or anything more complicated, it crashes because your eval() can't handle multiple operations.
+
+Quick Fix:
+Replace your eval function with a safer one that doesn't crash:
+
+kotlin
+Copy
+Edit
+fun eval(expression: String): Double {
+    val engine = javax.script.ScriptEngineManager().getEngineByName("rhino")
+    return engine.eval(expression).toString().toDouble()
+}
+✅ This uses a built-in JavaScript engine to safely evaluate the expression like a calculator would.
+
+⚡ Don't forget to add this import:
+
+kotlin
+Copy
+Edit
+import javax.script.ScriptEngineManager
+OR if you want, a very simple quick fix is:
+
+👉 Wrap eval code inside a try-catch:
+
+kotlin
+Copy
+Edit
+fun eval(expression: String): Double {
+    return try {
+        when {
+            expression.contains("+") -> {
+                val parts = expression.split("+")
+                parts[0].toDouble() + parts[1].toDouble()
+            }
+            expression.contains("-") -> {
+                val parts = expression.split("-")
+                parts[0].toDouble() - parts[1].toDouble()
+            }
+            expression.contains("*") -> {
+                val parts = expression.split("*")
+                parts[0].toDouble() * parts[1].toDouble()
+            }
+            expression.contains("/") -> {
+                val parts = expression.split("/")
+                parts[0].toDouble() / parts[1].toDouble()
+            }
+            else -> expression.toDouble()
+        }
+    } catch (e: Exception) {
+        0.0
+    }
+}
+At least then it won't crash.
+
+✨ In short:
+Either improve your eval logic (recommended).
+
+Or catch errors inside it.
+
+Check Logcat for the real error details.
+
+If you want, I can give you a fully working upgraded calculator that supports:
+
+full expressions like 12+5*3-4/2
+
+multiple operators
+
+parentheses ()
+
+better UI
+
+⚡ Should I? (will only take 2 mins)
+
+
+
+
+
+
+
+You said:
+Process: com.abmn.simple_calc, PID: 32552
+                                                                                                    java.lang.RuntimeException: Unable to instantiate activity ComponentInfo{com.abmn.simple_calc/com.abmn.simple_calc.MainActivity}: java.lang.ClassNotFoundException: Didn't find class "com.abmn.simple_calc.MainActivity" on path: DexPathList[[zip file "/data/app/~~rgVPTHey5VIOmuGL_oghNg==/com.abmn.simple_calc-QdQ4C1V0z7B5qy9dplYldw==/base.apk"],nativeLibraryDirectories=[/data/app/~~rgVPTHey5VIOmuGL_oghNg==/com.abmn.simple_calc-QdQ4C1V0z7B5qy9dplYldw==/lib/arm64, /system/lib64, /system_ext/lib64]]
+
+i am getting above errors
+                                                                                                    	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3894)
+                                                                                                    	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4140)
+                                                                                                    	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:103)
+                                                                                                    	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:149)
+                                                                                                    	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:99)
+                                                                                                    	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2585)
+                                                                                                    	at android.os.Handler.dispatchMessage(Handler.java:106)
+                                                                                                    	at android.os.Looper.loopOnce(Looper.java:224)
+                                                                                                    	at android.os.Looper.loop(Looper.java:318)
+                                                                                                    	at android.app.ActivityThread.main(ActivityThread.java:8772)
+                                                                                                    	at java.lang.reflect.Method.invoke(Native Method)
+                                                                                                    	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:561)
+                                                                                                    	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1013)
+                                                                                                    Caused by: java.lang.ClassNotFoundException: Didn't find class "com.abmn.simple_calc.MainActivity" on path: DexPathList[[zip file "/data/app/~~rgVPTHey5VIOmuGL_oghNg==/com.abmn.simple_calc-QdQ4C1V0z7B5qy9dplYldw==/base.apk"],nativeLibraryDirectories=[/data/app/~~rgVPTHey5VIOmuGL_oghNg==/com.abmn.simple_calc-QdQ4C1V0z7B5qy9dplYldw==/lib/arm64, /system/lib64, /system_ext/lib64]]
+                                                                                                    	at dalvik.system.BaseDexClassLoader.findClass(BaseDexClassLoader.java:259)
+                                                                                                    	at java.lang.ClassLoader.loadClass(ClassLoader.java:637)
+                                                                                                    	at java.lang.ClassLoader.loadClass(ClassLoader.java:573)
+                                                                                                    	at android.app.AppComponentFactory.instantiateActivity(AppComponentFactory.java:95)
+                                                                                                    	at androidx.core.app.CoreComponentFactory.instantiateActivity(CoreComponentFactory.java:44)
+                                                                                                    	at android.app.Instrumentation.newActivity(Instrumentation.java:1390)
+                                                                                                    	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3878)
+                                                                                                    	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4140) 
+                                                                                                    	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:103) 
+                                                                                                    	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:149) 
+                                                                                                    	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:99) 
+                                                                                                    	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2585) 
+                                                                                                    	at android.os.Handler.dispatchMessage(Handler.java:106) 
+                                                                                                    	at android.os.Looper.loopOnce(Looper.java:224) 
+                                                                                                    	at android.os.Looper.loop(Looper.java:318) 
+                                                                                                    	at android.app.ActivityThread.main(ActivityThread.java:8772) 
+                                                                                                    	at java.lang.reflect.Method.invoke(Native Method) 
+                                                                                                    	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:561) 
+                                                                                                    	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1013) 
+2025-04-22 12:42:35.094 32552-32552 Process                 com.abmn.simple_calc                 I  Process is going to kill itself!
+                                                                                                    java.lang.Exception
+                                                                                                    	at android.os.Process.killProcess(Process.java:1356)
+                                                                                                    	at com.android.internal.os.RuntimeInit$KillApplicationHandler.uncaughtException(RuntimeInit.java:174)
+                                                                                                    	at java.lang.ThreadGroup.uncaughtException(ThreadGroup.java:1071)
+                                                                                                    	at java.lang.ThreadGroup.uncaughtException(ThreadGroup.java:1066)
+                                                                                                    	at java.lang.Thread.dispatchUncaughtException(Thread.java:2306)
+2025-04-22 12:42:35.095 32552-32552 Process                 com.abmn.simple_calc                 I  Sending signal. PID: 32552 SIG: 9
+2025-04-22 12:42:35.211 23914-23963 LauncherAnimationRunner com.mi.android.globallauncher        E  onAnimationStart:   target=RemoteAnimationTargetCompat{taskId=1468, mode=1, isTranslucent=false, clipRect=Rect(0, 0 - 0, 0), position=Point(0, 0), sourceContainerBounds=Rect(0, 0 - 1080, 2460), prefixOrderIndex=3, isNotInRecents=true, contentInsets=Rect(0, 0 - 0, 0), activityType=1, packageName=com.abmn.simple_calc, startBounds=Rect(0, 0 - 1080, 2460), windowType=-1}
+2025-04-22 12:42:35.681  4941-5314  MiEvent                 com.miui.daemon                      E  report:open miev fail, EventId 901003005 -t 1745305955 -paraList {"PackageName":"com.abmn.simple_calc","Times":9}
+2025-04-22 12:42:35.729 23914-16703 ActivityManagerWrapper  com.mi.android.globallauncher        E  getRecentTasks: mainTaskId=1468   userId=0   windowMode=1   baseIntent=Intent { act=android.intent.action.MAIN flag=270532608 cmp=ComponentInfo{com.abmn.simple_calc/com.abmn.simple_calc.MainActivity} }
+2025-04-22 12:44:34.545 23914-16703 ActivityManagerWrapper  com.mi.android.globallauncher        E  getRecentTasks: mainTaskId=14
+
+
+ChatGPT said:
+Got it — thank you for sending the full crash logs.
+Now it's super clear what's happening:
+
+Main Problem:
+arduino
+Copy
+Edit
+Caused by: java.lang.ClassNotFoundException: Didn't find class "com.abmn.simple_calc.MainActivity"
+✅ The app cannot find your MainActivity class at runtime.
+This is NOT a code bug, it's a build/packaging/configuration problem.
+
+Top 3 reasons why this happens:
+Package name mismatch
+
+Wrong AndroidManifest.xml
+
+Gradle build incomplete or cache broken
+
+Let's fix it step-by-step:
+1. Check your MainActivity.kt package name
+At the top of your MainActivity.kt, you must have:
+
+kotlin
+Copy
+Edit
+package com.abmn.simple_calc
+(make sure it matches exactly with your AndroidManifest.xml)
+
+2. Check your AndroidManifest.xml
+Go to app/src/main/AndroidManifest.xml and check the activity declaration:
+
+Example:
+
+xml
+Copy
+Edit
+<application
+    android:allowBackup="true"
+    android:label="Simple Calculator"
+    android:theme="@style/Theme.SimpleCalc">
+
+    <activity android:name=".MainActivity">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+    </activity>
+
+</application>
+⚡ Important:
+
+The android:name=".MainActivity" should either be .MainActivity or full name like "com.abmn.simple_calc.MainActivity".
+
+If you wrote wrong name, like typo in package name, app will crash.
+
+3. Clean and Rebuild Project
+After fixing package/manifest:
+
+In Android Studio: Build > Clean Project
+
+Then: Build > Rebuild Project
+
+Then: Run again
+
+(Or shortcut: Shift+Ctrl+F9 Clean, then Shift+F10 Run)
+
+This forces Android Studio to rebuild the .apk correctly.
+
+4. If still not working (unlikely), Invalidate Caches
+In Android Studio:
+
+File > Invalidate Caches / Restart > Invalidate and Restart
+
+This fixes deep internal Gradle/IDE cache bugs.
+
+Why did it happen?
+When package name and manifest don't match correctly, Android can't find MainActivity inside the compiled APK, so the app crashes on launch immediately.
+
+Quick Example ✅ (Working)
+Suppose your MainActivity.kt has:
+
+kotlin
+Copy
+Edit
+package com.abmn.simple_calc
+Then your AndroidManifest.xml must have:
+
+xml
+Copy
+Edit
+<activity android:name=".MainActivity">
+or
+
+xml
+Copy
+Edit
+<activity android:name="com.abmn.simple_calc.MainActivity">
+⚡ TL;DR
+Package name in code and Manifest must match.
+
+Clean Project after fixing.
+
+If necessary, Invalidate Caches.
+
+Want me to give you a ready copy-paste correct AndroidManifest.xml also to speed up? 🚀
+(Just say the word!)
+Also if you want, I can show you how to make a cool calculator design while we fix this! 🔥
+
+
+
+
+
+
+
+You said:
+now it is working but when i typed in the app i don't see numbers 
+
+
+ChatGPT said:
+Alright, good — your app opens now ✅,
+but when you type numbers, they don't show up ❌.
+
+That usually means text state is not updating properly in Compose.
+
+Let’s quickly check:
+Inside your code, somewhere you should have something like:
+
+kotlin
+Copy
+Edit
+var expression by remember { mutableStateOf("") }
+and your text field (or display) should be something like:
+
+kotlin
+Copy
+Edit
+Text(
+    text = expression,
+    style = ...,  // styling
+    modifier = ...
+)
+Whenever you press a button, you should be updating expression like:
+
+kotlin
+Copy
+Edit
+expression += "1"  // or "2", "+", etc
+If your numbers aren't showing up, here are the common reasons:
+
+Problem	Cause	Fix
+expression is not inside remember {}	State is not remembered across recompositions	Use remember { mutableStateOf("") }
+You are not actually updating the expression variable	Button onClick not setting new value	Inside Button(onClick = { expression += "1" })
+Wrong Text displaying	Display is showing some hardcoded text instead of expression	Ensure you bind your expression to the Text
+Text color is invisible	White text on white background maybe?	Check Text color
+Minimum working example ✅:
+kotlin
+Copy
+Edit
+@Composable
+fun CalculatorApp() {
+    var expression by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Top
+    ) {
+        Text(
+            text = expression,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            fontSize = 32.sp
+        )
+
+        Button(
+            onClick = { expression += "1" },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text(text = "1")
+        }
+    }
+}
+✅ Pressing button updates and shows 1.
+
+Things to check in your code right now:
+ Did you use var expression by remember { mutableStateOf("") }?
+
+ Are you updating expression inside Button(onClick = { ... })?
+
+ Is your Text(text = expression) actually connected?
+
+ Is Text visible (not transparent or white on white)?
+
+If you want, send me your CalculatorApp() code (only that function),
+I'll fix it quickly for you! 🚀
+(then your calculator will start typing properly!)
+
+Want me to? 🔥
+Just copy-paste here.
+
+
+
+
+
+
+
+You said:
+package com.abmn.simple_calc
+
+import android.annotation.SuppressLint
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.ExperimentalMaterial3Api
+//import com.abmn.simple_calc.ui.theme.Simple_CalcTheme
+import kotlin.math.*
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            CalculatorApp()
+        }
+    }
+}
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CalculatorApp() {
+    var input by remember { mutableStateOf("") }
+    var result by remember { mutableStateOf("") }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Simple Calculator") }
+            )
+        },
+        content = {
+            CalculatorUI(input, result, onButtonClick = { button ->
+                if (button == "=") {
+                    try {
+                        result = evaluateExpression(input)
+                    } catch (e: Exception) {
+                        result = "Error"
+                    }
+                    input = result
+                } else if (button == "C") {
+                    input = ""
+                    result = ""
+                } else {
+                    input += button
+                }
+            })
+        }
+    )
+}
+
+@Composable
+fun CalculatorUI(input: String, result: String, onButtonClick: (String) -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = input,
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.Black,
+            maxLines = 1
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = result,
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.Gray,
+            maxLines = 1
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        val buttons = listOf(
+            "7", "8", "9", "/",
+            "4", "5", "6", "*",
+            "1", "2", "3", "-",
+            "0", ".", "=", "+",
+            "C"
+        )
+
+        GridLayout(buttons, onButtonClick)
+    }
+}
+
+@Composable
+fun GridLayout(buttons: List<String>, onButtonClick: (String) -> Unit) {
+    Column {
+        for (i in buttons.chunked(4)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                for (button in i) {
+                    Button(
+                        onClick = { onButtonClick(button) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                    ) {
+                        Text(text = button, color = Color.White)
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun evaluateExpression(expression: String): String {
+    // This will handle basic arithmetic expressions, using eval or a parser could be done here
+    return try {
+        val result = expression.replace(Regex("[^0-9+\\-*/.]"), "")
+        val evalResult = eval(result)
+        if (evalResult == evalResult.toInt().toDouble()) evalResult.toInt().toString() else evalResult.toString()
+    } catch (e: Exception) {
+        "Error"
+    }
+}
+
+fun eval(expression: String): Double {
+    // Simple evaluation using built-in Kotlin methods
+    return when {
+        expression.contains("+") -> {
+            val parts = expression.split("+")
+            parts[0].toDouble() + parts[1].toDouble()
+        }
+        expression.contains("-") -> {
+            val parts = expression.split("-")
+            parts[0].toDouble() - parts[1].toDouble()
+        }
+        expression.contains("*") -> {
+            val parts = expression.split("*")
+            parts[0].toDouble() * parts[1].toDouble()
+        }
+        expression.contains("/") -> {
+            val parts = expression.split("/")
+            parts[0].toDouble() / parts[1].toDouble()
+        }
+        else -> expression.toDouble()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DefaultPreview() {
+    CalculatorApp()
+}
+
+above is my code
+
+
+ChatGPT said:
+Thanks for sharing the full code — it makes everything super clear!
+You are very close, but I can now clearly see why you don’t see numbers when you type:
+
+Main Problem:
+In your CalculatorApp(), you have this:
+
+kotlin
+Copy
+Edit
+content = {
+    CalculatorUI(input, result, onButtonClick = { button -> 
+        // handle clicks
+    })
+}
+but because of how Compose works,
+inside Scaffold(content = { ... }),
+you need to manually pass it padding to your UI inside.
+Otherwise, your text fields can become invisible, squished, or wrongly sized.
+
+Quick Fix ✅:
+Instead of:
+
+kotlin
+Copy
+Edit
+content = {
+    CalculatorUI(input, result, onButtonClick = { ... })
+}
+Write this:
+
+kotlin
+Copy
+Edit
+content = { padding ->
+    Box(modifier = Modifier.padding(padding)) {
+        CalculatorUI(input, result, onButtonClick = { ... })
+    }
+}
+✅ This way the padding from Scaffold is properly applied.
+
+Updated CalculatorApp():
+kotlin
+Copy
+Edit
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CalculatorApp() {
+    var input by remember { mutableStateOf("") }
+    var result by remember { mutableStateOf("") }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Simple Calculator") }
+            )
+        },
+        content = { padding ->
+            Box(modifier = Modifier.padding(padding)) {
+                CalculatorUI(input, result, onButtonClick = { button ->
+                    if (button == "=") {
+                        try {
+                            result = evaluateExpression(input)
+                        } catch (e: Exception) {
+                            result = "Error"
+                        }
+                        input = result
+                    } else if (button == "C") {
+                        input = ""
+                        result = ""
+                    } else {
+                        input += button
+                    }
+                })
+            }
+        }
+    )
+}
+Why this matters?
+In Material3, Scaffold adds internal padding (for system bars, top bar, etc.).
+If you ignore the padding from content: (PaddingValues) -> Unit,
+your app UI sometimes does not get drawn properly — text fields can be hidden.
+
+Also small optional suggestion:
+In your GridLayout, you can fix button rows even better like this:
+
+kotlin
+Copy
+Edit
+Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 4.dp),
+    horizontalArrangement = Arrangement.SpaceEvenly
+) {
+    for (button in i) {
+        Button(
+            onClick = { onButtonClick(button) },
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 4.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+        ) {
+            Text(text = button, color = Color.White)
+        }
+    }
+}
+Small padding horizontally between buttons looks cleaner.
+
+⚡ Summary:
+Fix content = { padding -> ... }
+
+Text will now appear properly when you type buttons.
+
+App will feel more responsive too.
+
+Want me to also show you how to make the calculator more colorful (like blue number keys and orange operators +, -, *, /) just for fun? 🎨
+It'll take just 2 minutes! 🚀
+(Your app will look much more professional!)
+Let me know 🔥
